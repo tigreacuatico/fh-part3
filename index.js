@@ -1,6 +1,23 @@
 const express = require('express')
 const app = express()
+const morgan = require('morgan')
+app.use(express.json())
 
+// middleware
+// Configure morgan so that it also shows the data sent in HTTP POST requests:
+// in order to custom log formats, we create our own tokens.
+app.use(morgan((tokens, req, res) => {
+    return [
+      tokens.method(req, res),
+      tokens.url(req, res),
+      tokens.status(req, res),
+      tokens.res(req, res, 'content-length'), '-',
+      tokens['response-time'](req, res), 'ms',
+      JSON.stringify(req.body)
+    ].join(' ')
+  }))
+
+// data
 let persons = [
     { 
         "id": 1,
@@ -24,11 +41,13 @@ let persons = [
     }
 ]
 
+// routes
 app.get('/', (request, response) => {
     response.send('<h1>Hello World!</h1>')
 })
   
 app.get('/api/persons', (request, response) => {
+    console.log(persons)
     response.json(persons)
 })
 
@@ -60,23 +79,47 @@ const generateId = () => {
   
 app.post('/api/persons', (request, response) => {
     const body = request.body
-  
-    if (!body.content) {
-      return response.status(400).json({ 
-        error: 'content missing' 
-      })
+    if (!body.name || !body.number) {
+        return response.status(400).json({ 
+          error: 'content missing' 
+        })
+    }
+
+    const nameAlreadyInPhonebook = persons.map(person => {
+        if (person.name === body.name) return true
+        else return false
+    })
+    const exists = nameAlreadyInPhonebook.some(value => value === true)
+ 
+    if (exists === true) {
+        return response.status(400).json({
+            error: 'name must be unique'
+        })
     }
   
+    // ready to add person in phoebook
     const person = {
-      content: body.content,
       id: generateId(),
+      name: body.name,
+      number: body.number,
     }
   
     persons = persons.concat(person)
   
     response.json(person)
 })
-  
+
+//middleware
+
+// unknownEndpoint: middleware after our routes, that is used for catching 
+//requests made to non-existent routes. For these requests, the middleware
+// will return an error message in the JSON format.
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: "unknown endpoint" })
+}
+app.use(unknownEndpoint)
+
+// port
 const PORT = 3001
     app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
@@ -84,11 +127,21 @@ const PORT = 3001
 
 
 
+// npm start
+
 // process:
 // npm install express
 // npm install --save-dev nodemon
 // put "dev": "nodemon index.js", on scripts in package.json
 // npm run dev
 
+//npm install morgan
+
 // The primary purpose of the backend server in this course is to
-//  offer raw data in the JSON format to the frontend. 
+//  offer raw data in the JSON format to the frontend.
+
+/* Middleware functions have to be taken into use before routes if we want them 
+to be executed before the route event handlers are called. There are also situations
+ where we want to define middleware functions after routes. In practice, this means 
+ that we are defining middleware functions that are only called if no route handles 
+ the HTTP request.*/
