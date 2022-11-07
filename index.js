@@ -6,6 +6,7 @@ app.use(express.json())
 // middleware
 // Configure morgan so that it also shows the data sent in HTTP POST requests:
 // in order to custom log formats, we create our own tokens.
+// https://javascript.plainenglish.io/easy-logging-with-the-morgan-express-middleware-4569182ffda4
 app.use(morgan((tokens, req, res) => {
     return [
       tokens.method(req, res),
