@@ -1,6 +1,9 @@
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
+const cors = require('cors')
+
+app.use(cors())
 app.use(express.json())
 
 // middleware
@@ -121,7 +124,7 @@ const unknownEndpoint = (request, response) => {
 app.use(unknownEndpoint)
 
 // port
-const PORT = 3001
+const PORT = process.env.PORT || 3001
     app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
@@ -137,6 +140,7 @@ const PORT = 3001
 // npm run dev
 
 //npm install morgan
+// npm install cors
 
 // The primary purpose of the backend server in this course is to
 //  offer raw data in the JSON format to the frontend.
@@ -146,3 +150,6 @@ to be executed before the route event handlers are called. There are also situat
  where we want to define middleware functions after routes. In practice, this means 
  that we are defining middleware functions that are only called if no route handles 
  the HTTP request.*/
+
+ // p3c:
+ // npm install mongoose
